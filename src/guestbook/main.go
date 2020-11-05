@@ -68,7 +68,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	<-time.After(60 * time.Second) 
+	<-time.After(60 * time.Second)
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(writer)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
