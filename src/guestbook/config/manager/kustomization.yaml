@@ -1,0 +1,12 @@
+resources:
+- manager_secret.yaml
+- manager.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: controller
+  newName: jvesselv2-dockerhub-bj.jdcloud.com/leadertest/controller
+  newTag: testV0.1
+replicas:
+- count: 2
+  name: controller-manager

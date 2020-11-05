@@ -1,0 +1,250 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: guestbook-system
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: guestbooks.webapp.my.domain
+spec:
+  group: webapp.my.domain
+  names:
+    kind: Guestbook
+    listKind: GuestbookList
+    plural: guestbooks
+    singular: guestbook
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Guestbook is the Schema for the guestbooks API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: GuestbookSpec defines the desired state of Guestbook
+          properties:
+            foo:
+              description: Foo is an example field of Guestbook. Edit Guestbook_types.go
+                to remove/update
+              type: string
+          type: object
+        status:
+          description: GuestbookStatus defines the observed state of Guestbook
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: guestbook-leader-election-role
+  namespace: guestbook-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: guestbook-manager-role
+rules:
+- apiGroups:
+  - webapp.my.domain
+  resources:
+  - guestbooks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - webapp.my.domain
+  resources:
+  - guestbooks/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: guestbook-proxy-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: guestbook-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: guestbook-leader-election-rolebinding
+  namespace: guestbook-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: guestbook-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: guestbook-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: guestbook-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: guestbook-manager-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: guestbook-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: guestbook-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: guestbook-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: guestbook-system
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJqdmVzc2VsdjItZG9ja2VyaHViLWJqLmpkY2xvdWQuY29tIjp7InVzZXJuYW1lIjoiSnZlc3NlbFYyIiwicGFzc3dvcmQiOiJKdmVzc2VsMjAyMCIsImF1dGgiOiJTblpsYzNObGJGWXlPa3AyWlhOelpXd3lNREl3In19fQ==
+kind: Secret
+metadata:
+  name: guestbook-jvessel-secret
+  namespace: guestbook-system
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: guestbook-controller-manager-metrics-service
+  namespace: guestbook-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: guestbook-controller-manager
+  namespace: guestbook-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --enable-leader-election
+        command:
+        - /manager
+        image: jvesselv2-dockerhub-bj.jdcloud.com/leadertest/controller:testV0.1
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      imagePullSecrets:
+      - name: guestbook-jvessel-secret
+      terminationGracePeriodSeconds: 10
