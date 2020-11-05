@@ -36,7 +36,7 @@ type GuestbookSpec struct {
 type GuestbookStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	value string `json:"value,omitempty"`
+	State string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true

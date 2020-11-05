@@ -28,6 +28,7 @@ spec:
         args:
         - --enable-leader-election
         image: controller:latest
+        imagePullPolicy: Always
         name: manager
         resources:
           limits:
@@ -36,6 +37,13 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        volumeMounts:
+        - mountPath: /logs
+          name: nfs-pvc
       terminationGracePeriodSeconds: 10
       imagePullSecrets:
       - name: jvessel-secret
+      volumes:
+      - name: nfs-pvc
+        persistentVolumeClaim:
+          claimName: auto-pv-with-nfs-client-provisioner          #指定与云文件存储建立绑定关系的PVC 名称

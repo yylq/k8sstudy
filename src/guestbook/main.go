@@ -18,7 +18,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -26,6 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/lestrrat-go/file-rotatelogs"
 	webappv1 "guestbook/api/v1"
 	"guestbook/controllers"
 	// +kubebuilder:scaffold:imports
@@ -51,8 +54,22 @@ func main() {
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
+	hostname, _ := os.Hostname()
+	logName := fmt.Sprintf("/logs/%s/manager.log", hostname)
+	fmt.Printf("logName:%s\n", logName)
+	writer, err := rotatelogs.New(
+		logName+"%Y-%m-%d",
+		rotatelogs.WithLinkName(logName),          // 生成软链，指向最新日志文件
+		rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
+		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
+		rotatelogs.WithRotationSize(1024*1024*1024),
+	)
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	if err != nil {
+		panic(err)
+	}
+	<-time.After(60 * time.Second) 
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(writer)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
