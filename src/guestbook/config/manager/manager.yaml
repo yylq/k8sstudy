@@ -40,11 +40,17 @@ spec:
             memory: 20Mi
         volumeMounts:
         - mountPath: /logs
-          name: nfs-pvc
+          name: yunpanpvc
       terminationGracePeriodSeconds: 10
       imagePullSecrets:
       - name: jvessel-secret
-      volumes:
-      - name: nfs-pvc
-        persistentVolumeClaim:
-          claimName: auto-pv-with-nfs-client-provisioner          #指定与云文件存储建立绑定关系的PVC 名称
+  volumeClaimTemplates:
+  - metadata:
+      name: yunpanpvc
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: "default"
+      resources:
+        requests:
+          storage: 20Gi
