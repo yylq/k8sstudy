@@ -22,9 +22,9 @@ fn main() {
 
     // println!("x 的值为 : {}", x);
     // println!("y 的值为 : {}", y)
-    fn five() -> i32 {
-        5
-    }
-    println!("five() 的值为: {}", five());
-    println!("{:?}",format!("{:?}", (3, 4)));
+    // fn five() -> i32 {
+    //     5
+    // }
+    // println!("five() 的值为: {}", five());
+    // println!("{:?}",format!("{:?}", (3, 4)));
 }
